@@ -14,6 +14,7 @@
         preview: {
             ready: false,
             playing: false,
+            looping: true,
             fps: 12,
             maxHeight: 720
         },
@@ -35,8 +36,7 @@
         fileInput: document.getElementById('file-input'),
         dropZone: document.getElementById('drop-zone'),
         uploadCard: document.getElementById('upload-card'),
-        editorSection: document.getElementById('editor-section'),
-        outputSection: document.getElementById('output-section'),
+        mainEditorSection: document.getElementById('main-editor-section'),
         stillsGrid: document.getElementById('stills-grid'),
         selectionCount: document.getElementById('selection-count'),
         frameDuration: document.getElementById('frame-duration'),
@@ -45,7 +45,7 @@
         previewCanvas: document.getElementById('preview-canvas'),
         playBtn: document.getElementById('play-btn'),
         pauseBtn: document.getElementById('pause-btn'),
-        restartBtn: document.getElementById('restart-btn'),
+        loopBtn: document.getElementById('loop-btn'),
         previewStatus: document.getElementById('preview-status'),
         selectAllBtn: document.getElementById('select-all-btn'),
         clearBtn: document.getElementById('clear-btn'),
@@ -57,23 +57,30 @@
     }
 
     function setupEventListeners() {
-        elements.fileInput.addEventListener('change', handleFileSelect);
-        elements.dropZone.addEventListener('click', () => elements.fileInput.click());
-        elements.dropZone.addEventListener('dragover', handleDragOver);
-        elements.dropZone.addEventListener('dragleave', handleDragLeave);
-        elements.dropZone.addEventListener('drop', handleDrop);
+        // File upload listeners
+        if (elements.fileInput) elements.fileInput.addEventListener('change', handleFileSelect);
+        if (elements.dropZone) {
+            elements.dropZone.addEventListener('click', () => elements.fileInput.click());
+            elements.dropZone.addEventListener('dragover', handleDragOver);
+            elements.dropZone.addEventListener('dragleave', handleDragLeave);
+            elements.dropZone.addEventListener('drop', handleDrop);
+        }
 
-        elements.frameDuration.addEventListener('input', handleSettingsChange);
-        elements.transitionDuration.addEventListener('input', handleSettingsChange);
+        // Settings listeners
+        if (elements.frameDuration) elements.frameDuration.addEventListener('input', handleSettingsChange);
+        if (elements.transitionDuration) elements.transitionDuration.addEventListener('input', handleSettingsChange);
 
-        elements.selectAllBtn.addEventListener('click', selectAllStills);
-        elements.clearBtn.addEventListener('click', clearSelection);
-        elements.invertBtn.addEventListener('click', invertSelection);
+        // Selection listeners
+        if (elements.selectAllBtn) elements.selectAllBtn.addEventListener('click', selectAllStills);
+        if (elements.clearBtn) elements.clearBtn.addEventListener('click', clearSelection);
+        if (elements.invertBtn) elements.invertBtn.addEventListener('click', invertSelection);
 
-        elements.playBtn.addEventListener('click', playPreview);
-        elements.pauseBtn.addEventListener('click', pausePreview);
-        elements.restartBtn.addEventListener('click', restartPreview);
+        // Preview listeners
+        if (elements.playBtn) elements.playBtn.addEventListener('click', playPreview);
+        if (elements.pauseBtn) elements.pauseBtn.addEventListener('click', pausePreview);
+        if (elements.loopBtn) elements.loopBtn.addEventListener('click', toggleLoop);
 
+        // Export listeners - these exist in the initial HTML
         document.querySelectorAll('.export-btn').forEach(btn => {
             btn.addEventListener('click', handleExport);
         });
@@ -122,7 +129,7 @@
             await extractStills();
             hideUploadCard();
             showStillsUI();
-            showOutputUI();
+            showMainEditor();
             autoUpdatePreview();
         } catch (error) {
             console.error('Error processing video:', error);
@@ -140,8 +147,7 @@
             mp4: { state: 'idle', pct: 0, url: null }
         };
         
-        elements.editorSection.classList.add('hidden');
-        elements.outputSection.classList.add('hidden');
+        if (elements.mainEditorSection) elements.mainEditorSection.classList.add('hidden');
         
         if (videoElement) {
             URL.revokeObjectURL(videoElement.src);
@@ -265,18 +271,19 @@
         
         updateSelectionCount();
         updateTotalDuration();
-        elements.editorSection.classList.remove('hidden');
     }
 
-    function showOutputUI() {
-        elements.outputSection.classList.remove('hidden');
+    function showMainEditor() {
+        if (elements.mainEditorSection) elements.mainEditorSection.classList.remove('hidden');
     }
 
     function hideUploadCard() {
-        elements.uploadCard.classList.add('hiding');
-        setTimeout(() => {
-            elements.uploadCard.classList.add('hidden');
-        }, 400);
+        if (elements.uploadCard) {
+            elements.uploadCard.classList.add('hiding');
+            setTimeout(() => {
+                elements.uploadCard.classList.add('hidden');
+            }, 400);
+        }
     }
 
     function handleStillSelection() {
@@ -339,21 +346,23 @@
     }
 
     function updateSelectionCount() {
-        elements.selectionCount.textContent = `${state.selectedIds.length} selected`;
+        if (elements.selectionCount) {
+            elements.selectionCount.textContent = `${state.selectedIds.length} selected`;
+        }
     }
 
     function updateTotalDuration() {
         const numSelected = state.selectedIds.length;
-        state.settings.frameSec = parseFloat(elements.frameDuration.value);
-        state.settings.transitionSec = parseFloat(elements.transitionDuration.value);
+        if (elements.frameDuration) state.settings.frameSec = parseFloat(elements.frameDuration.value);
+        if (elements.transitionDuration) state.settings.transitionSec = parseFloat(elements.transitionDuration.value);
         
         if (state.settings.transitionSec > state.settings.frameSec * 0.8) {
             state.settings.transitionSec = state.settings.frameSec * 0.8;
-            elements.transitionDuration.value = state.settings.transitionSec.toFixed(1);
+            if (elements.transitionDuration) elements.transitionDuration.value = state.settings.transitionSec.toFixed(1);
         }
         
         const total = calculateTotalDuration(numSelected, state.settings.frameSec, state.settings.transitionSec);
-        elements.totalDuration.textContent = `${total.toFixed(1)}s`;
+        if (elements.totalDuration) elements.totalDuration.textContent = `${total.toFixed(1)}s`;
     }
 
     function calculateTotalDuration(numFrames, frameSec, transitionSec) {
@@ -385,6 +394,8 @@
     }
 
     function setupPreviewCanvas() {
+        if (!elements.previewCanvas) return;
+        
         const { width, height } = state.videoMeta;
         const { maxHeight } = state.preview;
         
@@ -406,8 +417,8 @@
         if (!state.preview.ready) return;
         
         state.preview.playing = true;
-        elements.playBtn.classList.add('hidden');
-        elements.pauseBtn.classList.remove('hidden');
+        if (elements.playBtn) elements.playBtn.classList.add('hidden');
+        if (elements.pauseBtn) elements.pauseBtn.classList.remove('hidden');
         
         if (currentPreviewTime >= calculateTotalDuration(state.selectedIds.length, state.settings.frameSec, state.settings.transitionSec)) {
             currentPreviewTime = 0;
@@ -419,12 +430,23 @@
 
     function pausePreview() {
         state.preview.playing = false;
-        elements.playBtn.classList.remove('hidden');
-        elements.pauseBtn.classList.add('hidden');
+        if (elements.playBtn) elements.playBtn.classList.remove('hidden');
+        if (elements.pauseBtn) elements.pauseBtn.classList.add('hidden');
         
         if (previewAnimationId) {
             cancelAnimationFrame(previewAnimationId);
             previewAnimationId = null;
+        }
+    }
+
+    function toggleLoop() {
+        state.preview.looping = !state.preview.looping;
+        if (elements.loopBtn) {
+            if (state.preview.looping) {
+                elements.loopBtn.classList.add('active');
+            } else {
+                elements.loopBtn.classList.remove('active');
+            }
         }
     }
 
@@ -444,10 +466,15 @@
         const totalDuration = calculateTotalDuration(state.selectedIds.length, state.settings.frameSec, state.settings.transitionSec);
         
         if (currentPreviewTime >= totalDuration) {
-            currentPreviewTime = totalDuration;
-            pausePreview();
-            updatePreviewStatus(state.selectedIds.length, state.selectedIds.length);
-            return;
+            if (state.preview.looping) {
+                currentPreviewTime = 0;
+                previewStartTime = now;
+            } else {
+                currentPreviewTime = totalDuration;
+                pausePreview();
+                updatePreviewStatus(state.selectedIds.length, state.selectedIds.length);
+                return;
+            }
         }
         
         const frameData = getFrameAtTime(currentPreviewTime);
@@ -497,6 +524,8 @@
     }
 
     function renderFrameData(frameData) {
+        if (!elements.previewCanvas) return;
+        
         const ctx = elements.previewCanvas.getContext('2d');
         const canvas = elements.previewCanvas;
         
@@ -531,8 +560,10 @@
     }
 
     function updatePreviewStatus(current, total) {
-        const totalDuration = calculateTotalDuration(state.selectedIds.length, state.settings.frameSec, state.settings.transitionSec);
-        elements.previewStatus.textContent = `Frame ${current}/${total} • ${currentPreviewTime.toFixed(1)}s/${totalDuration.toFixed(1)}s`;
+        if (elements.previewStatus) {
+            const totalDuration = calculateTotalDuration(state.selectedIds.length, state.settings.frameSec, state.settings.transitionSec);
+            elements.previewStatus.textContent = `Frame ${current}/${total} • ${currentPreviewTime.toFixed(1)}s/${totalDuration.toFixed(1)}s`;
+        }
     }
 
     async function handleExport(e) {
@@ -605,6 +636,19 @@
         download.download = filename;
         download.textContent = `Download ${format.toUpperCase()}`;
         download.classList.remove('hidden');
+        
+        // Auto-download the file
+        autoDownload(url, filename);
+    }
+    
+    function autoDownload(url, filename) {
+        const a = document.createElement('a');
+        a.style.display = 'none';
+        a.href = url;
+        a.download = filename;
+        document.body.appendChild(a);
+        a.click();
+        document.body.removeChild(a);
     }
 
     function resetExportUI(format) {

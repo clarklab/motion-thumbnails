@@ -8,7 +8,12 @@
 </head>
 <body>
     <header>
-        <h1>Motion Thumbnails</h1>
+        <h1>
+            <svg xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 -960 960 960" width="24px" fill="currentColor">
+                <path d="M280-280v-80h240q-14-17-22.5-37T484-440H360v-80h124q5-23 13.5-43t22.5-37H120v-80h560q83 0 141.5 58.5T880-480q0 83-58.5 141.5T680-280H280Zm400-80q50 0 85-35t35-85q0-50-35-85t-85-35q-50 0-85 35t-35 85q0 50 35 85t85 35ZM80-440v-80h240v80H80Zm40 160v-80h120v80H120Z"/>
+            </svg>
+            Motion Thumbnails
+        </h1>
     </header>
 
     <main>
@@ -25,12 +30,17 @@
             </div>
         </section>
 
-        <section id="editor-section" class="hidden">
+        <section id="main-editor-section" class="hidden">
             <div class="card">
-                <div class="editor-layout">
-                    <div class="frames-column">
+                <div class="main-layout">
+                    <div class="frames-section">
                         <div class="section-header">
-                            <h2>Frames</h2>
+                            <h2>
+                                <svg xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 -960 960 960" width="24px" fill="currentColor">
+                                    <path d="M160-80q-33 0-56.5-23.5T80-160v-600q0-33 23.5-56.5T160-840h40v-40q0-17 11.5-28.5T240-920h160q17 0 28.5 11.5T440-880v40h40q33 0 56.5 23.5T560-760h320v600H560q0 33-23.5 56.5T480-80H160Zm0-80h320v-80h320v-440H480v-80H160v600Zm200-120h80v-80h-80v80Zm0-280h80v-80h-80v80Zm160 280h80v-80h-80v80Zm0-280h80v-80h-80v80Zm160 280h80v-80h-80v80Zm0-280h80v-80h-80v80ZM320-460Z"/>
+                                </svg>
+                                Frames
+                            </h2>
                             <div class="toolbar">
                                 <button id="select-all-btn" class="btn btn-secondary btn-small">All</button>
                                 <button id="clear-btn" class="btn btn-secondary btn-small">None</button>
@@ -39,88 +49,94 @@
                             </div>
                         </div>
                         <div id="stills-grid" class="stills-grid"></div>
-                    </div>
-                    
-                    <div class="settings-column">
-                        <h3>Settings</h3>
-                        <div class="settings-stack">
-                            <div class="setting">
-                                <label for="frame-duration">Frame duration</label>
-                                <input type="number" id="frame-duration" value="3.0" min="0.2" max="10" step="0.1">
-                                <span class="unit">seconds</span>
+                        
+                        <div class="settings-section">
+                            <div class="settings-header">
+                                <h3>
+                                    <svg xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 -960 960 960" width="24px" fill="currentColor">
+                                        <path d="M440-280h80l12-60q12-5 22.5-10.5T576-364l58 18 40-68-46-40q2-14 2-26t-2-26l46-40-40-68-58 18q-11-8-21.5-13.5T532-620l-12-60h-80l-12 60q-12 5-22.5 10.5T384-596l-58-18-40 68 46 40q-2 14-2 26t2 26l-46 40 40 68 58-18q11 8 21.5 13.5T428-340l12 60Zm40-120q-33 0-56.5-23.5T400-480q0-33 23.5-56.5T480-560q33 0 56.5 23.5T560-480q0 33-23.5 56.5T480-400ZM200-120q-33 0-56.5-23.5T120-200v-560q0-33 23.5-56.5T200-840h560q33 0 56.5 23.5T840-760v560q0 33-23.5 56.5T760-120H200Zm0-80h560v-560H200v560Zm0-560v560-560Z"/>
+                                    </svg>
+                                    Settings
+                                </h3>
+                                <span id="total-duration" class="duration-display">0s</span>
                             </div>
-                            <div class="setting">
-                                <label for="transition-duration">Transition duration</label>
-                                <input type="number" id="transition-duration" value="0.5" min="0" max="2" step="0.1">
-                                <span class="unit">seconds</span>
-                            </div>
-                            <div class="setting">
-                                <label>Transition type</label>
-                                <span class="readonly-value">Fade</span>
-                            </div>
-                            <div class="setting">
-                                <label>Total duration</label>
-                                <span id="total-duration" class="readonly-value">0s</span>
+                            <div class="settings-grid">
+                                <div class="setting">
+                                    <label for="frame-duration">Frame duration</label>
+                                    <input type="number" id="frame-duration" value="3.0" min="0.2" max="10" step="0.1">
+                                    <span class="unit">seconds</span>
+                                </div>
+                                <div class="setting">
+                                    <label for="transition-duration">Transition duration</label>
+                                    <input type="number" id="transition-duration" value="0.5" min="0" max="2" step="0.1">
+                                    <span class="unit">seconds</span>
+                                </div>
                             </div>
                         </div>
                     </div>
-                </div>
-            </div>
-        </section>
-
-        <section id="output-section" class="hidden">
-            <div class="card">
-                <div class="output-layout">
-                    <div class="preview-column">
-                        <h2>Preview</h2>
-                        <div class="preview-container">
-                            <canvas id="preview-canvas"></canvas>
+                    
+                    <div class="preview-section">
+                        <div class="preview-header">
+                            <h2>
+                                <svg xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 -960 960 960" width="24px" fill="currentColor">
+                                    <path d="m160-800 80 160h120l-80-160h80l80 160h120l-80-160h80l80 160h120l-80-160h120q33 0 56.5 23.5T880-720v480q0 33-23.5 56.5T800-160H160q-33 0-56.5-23.5T80-240v-480q0-33 23.5-56.5T160-800Zm0 240v320h640v-320H160Zm0 0v320-320Z"/>
+                                </svg>
+                                Preview
+                            </h2>
                             <div class="preview-controls">
-                                <button id="play-btn" class="btn btn-secondary" aria-label="Play">▶</button>
-                                <button id="pause-btn" class="btn btn-secondary hidden" aria-label="Pause">⏸</button>
-                                <button id="restart-btn" class="btn btn-secondary" aria-label="Restart">↺</button>
+                                <button id="play-btn" class="btn btn-secondary hidden" aria-label="Play">▶</button>
+                                <button id="pause-btn" class="btn btn-secondary" aria-label="Pause">⏸</button>
+                                <button id="loop-btn" class="btn btn-secondary active" aria-label="Loop">🔁</button>
                                 <span id="preview-status" class="preview-status">Frame 1/1 • 0s/0s</span>
                             </div>
                         </div>
-                    </div>
-                    
-                    <div class="export-column">
-                        <h3>Export</h3>
-                        <div class="export-stack">
-                            <div class="export-item" data-format="webm">
-                                <button class="btn btn-primary export-btn">Export WebM</button>
-                                <div class="progress-container hidden">
-                                    <div class="progress">
-                                        <div class="progress-bar"></div>
+                        <div class="preview-container">
+                            <canvas id="preview-canvas"></canvas>
+                        </div>
+                        
+                        <div class="export-section">
+                            <h3>
+                                <svg xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 -960 960 960" width="24px" fill="currentColor">
+                                    <path d="M200-766v572q-17-17-32-36t-28-39v-422q13-20 28-39t32-36Zm160-96v764q-21-7-41-15.5T280-133v-694q19-11 39-19.5t41-15.5Zm280 749v-734q106 47 173 145t67 222q0 124-67 222T640-113ZM480-80q-10 0-20-.5T440-82v-796q10-1 20-1.5t20-.5q20 0 40 2t40 6v784q-20 4-40 6t-40 2Z"/>
+                                </svg>
+                                Export
+                            </h3>
+                            <div class="export-row">
+                                <div class="export-item" data-format="webm">
+                                    <button class="btn btn-primary export-btn">webm</button>
+                                    <div class="progress-container hidden">
+                                        <div class="progress">
+                                            <div class="progress-bar"></div>
+                                        </div>
+                                        <span class="progress-label">Initializing...</span>
+                                        <button class="btn btn-secondary btn-small cancel-btn">Cancel</button>
                                     </div>
-                                    <span class="progress-label">Initializing...</span>
-                                    <button class="btn btn-secondary btn-small cancel-btn">Cancel</button>
+                                    <a class="download-link hidden" download>Download WebM</a>
                                 </div>
-                                <a class="download-link hidden" download>Download WebM</a>
-                            </div>
-                            
-                            <div class="export-item" data-format="gif">
-                                <button class="btn btn-primary export-btn">Export GIF</button>
-                                <div class="progress-container hidden">
-                                    <div class="progress">
-                                        <div class="progress-bar"></div>
+                                
+                                <div class="export-item" data-format="gif">
+                                    <button class="btn btn-primary export-btn">gif</button>
+                                    <div class="progress-container hidden">
+                                        <div class="progress">
+                                            <div class="progress-bar"></div>
+                                        </div>
+                                        <span class="progress-label">Initializing...</span>
+                                        <button class="btn btn-secondary btn-small cancel-btn">Cancel</button>
                                     </div>
-                                    <span class="progress-label">Initializing...</span>
-                                    <button class="btn btn-secondary btn-small cancel-btn">Cancel</button>
+                                    <a class="download-link hidden" download>Download GIF</a>
                                 </div>
-                                <a class="download-link hidden" download>Download GIF</a>
-                            </div>
-                            
-                            <div class="export-item" data-format="mp4">
-                                <button class="btn btn-primary export-btn">Export MP4</button>
-                                <div class="progress-container hidden">
-                                    <div class="progress">
-                                        <div class="progress-bar"></div>
+                                
+                                <div class="export-item" data-format="mp4">
+                                    <button class="btn btn-primary export-btn">mp4</button>
+                                    <div class="progress-container hidden">
+                                        <div class="progress">
+                                            <div class="progress-bar"></div>
+                                        </div>
+                                        <span class="progress-label">Initializing...</span>
+                                        <button class="btn btn-secondary btn-small cancel-btn">Cancel</button>
                                     </div>
-                                    <span class="progress-label">Initializing...</span>
-                                    <button class="btn btn-secondary btn-small cancel-btn">Cancel</button>
+                                    <a class="download-link hidden" download>Download MP4</a>
                                 </div>
-                                <a class="download-link hidden" download>Download MP4</a>
                             </div>
                         </div>
                     </div>
