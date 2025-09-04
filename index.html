@@ -3,17 +3,16 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Motion Thumbnail Maker</title>
+    <title>Motion Thumbnails</title>
     <link rel="stylesheet" href="styles.css">
 </head>
 <body>
     <header>
-        <h1>Motion Thumbnail Maker</h1>
-        <p>Create animated thumbnails from your videos — all processing happens in your browser</p>
+        <h1>Motion Thumbnails</h1>
     </header>
 
     <main>
-        <section id="upload-card" class="card">
+        <section id="upload-card" class="card upload-section">
             <div id="drop-zone" class="drop-zone">
                 <svg width="60" height="60" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                     <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
@@ -26,97 +25,104 @@
             </div>
         </section>
 
-        <section id="stills-section" class="hidden">
+        <section id="editor-section" class="hidden">
             <div class="card">
-                <h2>Select Frames</h2>
-                <div class="toolbar">
-                    <button id="select-all-btn" class="btn btn-secondary">Select All</button>
-                    <button id="clear-btn" class="btn btn-secondary">Clear</button>
-                    <button id="invert-btn" class="btn btn-secondary">Invert Selection</button>
-                    <span id="selection-count" class="selection-count">0 selected</span>
-                </div>
-                <div id="stills-grid" class="stills-grid"></div>
-            </div>
-        </section>
-
-        <section id="settings-section" class="hidden">
-            <div class="card">
-                <h2>Settings</h2>
-                <div class="settings-grid">
-                    <div class="setting">
-                        <label for="frame-duration">Frame duration (seconds)</label>
-                        <input type="number" id="frame-duration" value="3.0" min="0.2" max="10" step="0.1">
-                    </div>
-                    <div class="setting">
-                        <label for="transition-duration">Transition duration (seconds)</label>
-                        <input type="number" id="transition-duration" value="0.5" min="0" max="2" step="0.1">
-                    </div>
-                    <div class="setting">
-                        <label>Transition type</label>
-                        <span class="readonly-value">Fade</span>
-                    </div>
-                    <div class="setting">
-                        <label>Total duration</label>
-                        <span id="total-duration" class="readonly-value">0s</span>
-                    </div>
-                </div>
-                <button id="make-thumbnail-btn" class="btn btn-primary">Make Thumbnail</button>
-            </div>
-        </section>
-
-        <section id="preview-section" class="hidden">
-            <div class="card">
-                <h2>Preview</h2>
-                <div class="preview-container">
-                    <canvas id="preview-canvas"></canvas>
-                    <div class="preview-controls">
-                        <button id="play-btn" class="btn btn-secondary" aria-label="Play">▶</button>
-                        <button id="pause-btn" class="btn btn-secondary hidden" aria-label="Pause">⏸</button>
-                        <button id="restart-btn" class="btn btn-secondary" aria-label="Restart">↺</button>
-                        <span id="preview-status" class="preview-status">Frame 1/1 • 0s/0s</span>
-                    </div>
-                </div>
-            </div>
-        </section>
-
-        <section id="export-section" class="hidden">
-            <div class="card">
-                <h2>Export</h2>
-                <div class="export-grid">
-                    <div class="export-item" data-format="webm">
-                        <button class="btn btn-primary export-btn" disabled>Export WebM</button>
-                        <div class="progress-container hidden">
-                            <div class="progress">
-                                <div class="progress-bar"></div>
+                <div class="editor-layout">
+                    <div class="frames-column">
+                        <div class="section-header">
+                            <h2>Frames</h2>
+                            <div class="toolbar">
+                                <button id="select-all-btn" class="btn btn-secondary btn-small">All</button>
+                                <button id="clear-btn" class="btn btn-secondary btn-small">None</button>
+                                <button id="invert-btn" class="btn btn-secondary btn-small">Invert</button>
+                                <span id="selection-count" class="selection-count">0 selected</span>
                             </div>
-                            <span class="progress-label">Initializing...</span>
-                            <button class="btn btn-secondary cancel-btn">Cancel</button>
                         </div>
-                        <a class="download-link hidden" download>Download WebM</a>
+                        <div id="stills-grid" class="stills-grid"></div>
                     </div>
                     
-                    <div class="export-item" data-format="gif">
-                        <button class="btn btn-primary export-btn" disabled>Export GIF</button>
-                        <div class="progress-container hidden">
-                            <div class="progress">
-                                <div class="progress-bar"></div>
+                    <div class="settings-column">
+                        <h3>Settings</h3>
+                        <div class="settings-stack">
+                            <div class="setting">
+                                <label for="frame-duration">Frame duration</label>
+                                <input type="number" id="frame-duration" value="3.0" min="0.2" max="10" step="0.1">
+                                <span class="unit">seconds</span>
                             </div>
-                            <span class="progress-label">Initializing...</span>
-                            <button class="btn btn-secondary cancel-btn">Cancel</button>
+                            <div class="setting">
+                                <label for="transition-duration">Transition duration</label>
+                                <input type="number" id="transition-duration" value="0.5" min="0" max="2" step="0.1">
+                                <span class="unit">seconds</span>
+                            </div>
+                            <div class="setting">
+                                <label>Transition type</label>
+                                <span class="readonly-value">Fade</span>
+                            </div>
+                            <div class="setting">
+                                <label>Total duration</label>
+                                <span id="total-duration" class="readonly-value">0s</span>
+                            </div>
                         </div>
-                        <a class="download-link hidden" download>Download GIF</a>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <section id="output-section" class="hidden">
+            <div class="card">
+                <div class="output-layout">
+                    <div class="preview-column">
+                        <h2>Preview</h2>
+                        <div class="preview-container">
+                            <canvas id="preview-canvas"></canvas>
+                            <div class="preview-controls">
+                                <button id="play-btn" class="btn btn-secondary" aria-label="Play">▶</button>
+                                <button id="pause-btn" class="btn btn-secondary hidden" aria-label="Pause">⏸</button>
+                                <button id="restart-btn" class="btn btn-secondary" aria-label="Restart">↺</button>
+                                <span id="preview-status" class="preview-status">Frame 1/1 • 0s/0s</span>
+                            </div>
+                        </div>
                     </div>
                     
-                    <div class="export-item" data-format="mp4">
-                        <button class="btn btn-primary export-btn" disabled>Export MP4</button>
-                        <div class="progress-container hidden">
-                            <div class="progress">
-                                <div class="progress-bar"></div>
+                    <div class="export-column">
+                        <h3>Export</h3>
+                        <div class="export-stack">
+                            <div class="export-item" data-format="webm">
+                                <button class="btn btn-primary export-btn">Export WebM</button>
+                                <div class="progress-container hidden">
+                                    <div class="progress">
+                                        <div class="progress-bar"></div>
+                                    </div>
+                                    <span class="progress-label">Initializing...</span>
+                                    <button class="btn btn-secondary btn-small cancel-btn">Cancel</button>
+                                </div>
+                                <a class="download-link hidden" download>Download WebM</a>
                             </div>
-                            <span class="progress-label">Initializing...</span>
-                            <button class="btn btn-secondary cancel-btn">Cancel</button>
+                            
+                            <div class="export-item" data-format="gif">
+                                <button class="btn btn-primary export-btn">Export GIF</button>
+                                <div class="progress-container hidden">
+                                    <div class="progress">
+                                        <div class="progress-bar"></div>
+                                    </div>
+                                    <span class="progress-label">Initializing...</span>
+                                    <button class="btn btn-secondary btn-small cancel-btn">Cancel</button>
+                                </div>
+                                <a class="download-link hidden" download>Download GIF</a>
+                            </div>
+                            
+                            <div class="export-item" data-format="mp4">
+                                <button class="btn btn-primary export-btn">Export MP4</button>
+                                <div class="progress-container hidden">
+                                    <div class="progress">
+                                        <div class="progress-bar"></div>
+                                    </div>
+                                    <span class="progress-label">Initializing...</span>
+                                    <button class="btn btn-secondary btn-small cancel-btn">Cancel</button>
+                                </div>
+                                <a class="download-link hidden" download>Download MP4</a>
+                            </div>
                         </div>
-                        <a class="download-link hidden" download>Download MP4</a>
                     </div>
                 </div>
             </div>

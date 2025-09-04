@@ -34,16 +34,14 @@
     const elements = {
         fileInput: document.getElementById('file-input'),
         dropZone: document.getElementById('drop-zone'),
-        stillsSection: document.getElementById('stills-section'),
+        uploadCard: document.getElementById('upload-card'),
+        editorSection: document.getElementById('editor-section'),
+        outputSection: document.getElementById('output-section'),
         stillsGrid: document.getElementById('stills-grid'),
-        settingsSection: document.getElementById('settings-section'),
-        previewSection: document.getElementById('preview-section'),
-        exportSection: document.getElementById('export-section'),
         selectionCount: document.getElementById('selection-count'),
         frameDuration: document.getElementById('frame-duration'),
         transitionDuration: document.getElementById('transition-duration'),
         totalDuration: document.getElementById('total-duration'),
-        makeThumbnailBtn: document.getElementById('make-thumbnail-btn'),
         previewCanvas: document.getElementById('preview-canvas'),
         playBtn: document.getElementById('play-btn'),
         pauseBtn: document.getElementById('pause-btn'),
@@ -65,9 +63,8 @@
         elements.dropZone.addEventListener('dragleave', handleDragLeave);
         elements.dropZone.addEventListener('drop', handleDrop);
 
-        elements.frameDuration.addEventListener('input', updateTotalDuration);
-        elements.transitionDuration.addEventListener('input', updateTotalDuration);
-        elements.makeThumbnailBtn.addEventListener('click', makeThumbnail);
+        elements.frameDuration.addEventListener('input', handleSettingsChange);
+        elements.transitionDuration.addEventListener('input', handleSettingsChange);
 
         elements.selectAllBtn.addEventListener('click', selectAllStills);
         elements.clearBtn.addEventListener('click', clearSelection);
@@ -123,8 +120,10 @@
         try {
             await extractVideoMetadata(file);
             await extractStills();
+            hideUploadCard();
             showStillsUI();
-            showSettingsUI();
+            showOutputUI();
+            autoUpdatePreview();
         } catch (error) {
             console.error('Error processing video:', error);
             alert('Error processing video. Please try another file.');
@@ -141,10 +140,8 @@
             mp4: { state: 'idle', pct: 0, url: null }
         };
         
-        elements.stillsSection.classList.add('hidden');
-        elements.settingsSection.classList.add('hidden');
-        elements.previewSection.classList.add('hidden');
-        elements.exportSection.classList.add('hidden');
+        elements.editorSection.classList.add('hidden');
+        elements.outputSection.classList.add('hidden');
         
         if (videoElement) {
             URL.revokeObjectURL(videoElement.src);
@@ -267,12 +264,19 @@
         });
         
         updateSelectionCount();
-        elements.stillsSection.classList.remove('hidden');
+        updateTotalDuration();
+        elements.editorSection.classList.remove('hidden');
     }
 
-    function showSettingsUI() {
-        updateTotalDuration();
-        elements.settingsSection.classList.remove('hidden');
+    function showOutputUI() {
+        elements.outputSection.classList.remove('hidden');
+    }
+
+    function hideUploadCard() {
+        elements.uploadCard.classList.add('hiding');
+        setTimeout(() => {
+            elements.uploadCard.classList.add('hidden');
+        }, 400);
     }
 
     function handleStillSelection() {
@@ -291,6 +295,7 @@
         
         updateSelectionCount();
         updateTotalDuration();
+        autoUpdatePreview();
     }
 
     function selectAllStills() {
@@ -363,16 +368,20 @@
         return `${mins}:${secs.toString().padStart(2, '0')}`;
     }
 
-    async function makeThumbnail() {
-        if (state.selectedIds.length === 0) {
-            alert('Please select at least one frame');
-            return;
+    function handleSettingsChange() {
+        updateTotalDuration();
+        if (state.selectedIds.length > 0) {
+            autoUpdatePreview();
         }
+    }
+
+    function autoUpdatePreview() {
+        if (state.selectedIds.length === 0) return;
         
         state.preview.ready = true;
         setupPreviewCanvas();
-        showPreviewUI();
-        enableExportButtons();
+        restartPreview();
+        playPreview();
     }
 
     function setupPreviewCanvas() {
@@ -392,17 +401,6 @@
         elements.previewCanvas.height = canvasHeight;
     }
 
-    function showPreviewUI() {
-        elements.previewSection.classList.remove('hidden');
-        elements.exportSection.classList.remove('hidden');
-        updatePreviewStatus(0, 0);
-    }
-
-    function enableExportButtons() {
-        document.querySelectorAll('.export-btn').forEach(btn => {
-            btn.disabled = false;
-        });
-    }
 
     function playPreview() {
         if (!state.preview.ready) return;
@@ -539,6 +537,11 @@
 
     async function handleExport(e) {
         const format = e.target.closest('.export-item').dataset.format;
+        
+        if (!state.preview.ready) {
+            alert('Please select at least one frame first');
+            return;
+        }
         
         if (state.exportStatus[format].state !== 'idle') return;
         
