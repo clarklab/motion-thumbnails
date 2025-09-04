@@ -1,0 +1,32 @@
+/*
+  X-Frame-Options: DENY
+  X-XSS-Protection: 1; mode=block
+  X-Content-Type-Options: nosniff
+  Referrer-Policy: no-referrer-when-downgrade
+  Permissions-Policy: camera=(), microphone=(), geolocation=()
+
+/*.js
+  Content-Type: application/javascript; charset=UTF-8
+  Cache-Control: public, max-age=3600
+
+/workers/*.js
+  Content-Type: application/javascript; charset=UTF-8
+  Cache-Control: public, max-age=3600
+
+/*.wasm
+  Content-Type: application/wasm
+  Cache-Control: public, max-age=604800
+  Cross-Origin-Embedder-Policy: require-corp
+  Cross-Origin-Opener-Policy: same-origin
+
+/*.css
+  Content-Type: text/css; charset=UTF-8
+  Cache-Control: public, max-age=3600
+
+/*.html
+  Content-Type: text/html; charset=UTF-8
+  Cache-Control: no-cache
+
+/libs/*
+  Cache-Control: public, max-age=604800
+  Access-Control-Allow-Origin: *
