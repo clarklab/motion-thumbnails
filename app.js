@@ -41,6 +41,8 @@
         selectionCount: document.getElementById('selection-count'),
         frameDuration: document.getElementById('frame-duration'),
         transitionDuration: document.getElementById('transition-duration'),
+        frameDurationSlider: document.getElementById('frame-duration-slider'),
+        transitionDurationSlider: document.getElementById('transition-duration-slider'),
         totalDuration: document.getElementById('total-duration'),
         previewCanvas: document.getElementById('preview-canvas'),
         playBtn: document.getElementById('play-btn'),
@@ -54,6 +56,7 @@
 
     function init() {
         setupEventListeners();
+        setupSliders();
     }
 
     function setupEventListeners() {
@@ -67,8 +70,8 @@
         }
 
         // Settings listeners
-        if (elements.frameDuration) elements.frameDuration.addEventListener('input', handleSettingsChange);
-        if (elements.transitionDuration) elements.transitionDuration.addEventListener('input', handleSettingsChange);
+        if (elements.frameDuration) elements.frameDuration.addEventListener('input', handleNumberInputChange);
+        if (elements.transitionDuration) elements.transitionDuration.addEventListener('input', handleNumberInputChange);
 
         // Selection listeners
         if (elements.selectAllBtn) elements.selectAllBtn.addEventListener('click', selectAllStills);
@@ -368,7 +371,16 @@
     function calculateTotalDuration(numFrames, frameSec, transitionSec) {
         if (numFrames <= 0) return 0;
         if (numFrames === 1) return frameSec;
-        return numFrames * frameSec + (numFrames - 1) * transitionSec;
+        
+        // For seamless looping:
+        // - All frames except the last get full duration
+        // - Last frame gets half duration 
+        // - Add transition back to first frame for seamless loop
+        const lastFrameDuration = frameSec * 0.5;
+        const normalFramesDuration = (numFrames - 1) * frameSec;
+        const allTransitions = numFrames * transitionSec; // Including transition back to first
+        
+        return normalFramesDuration + lastFrameDuration + allTransitions;
     }
 
     function formatTime(seconds) {
@@ -377,10 +389,132 @@
         return `${mins}:${secs.toString().padStart(2, '0')}`;
     }
 
+    function handleNumberInputChange(e) {
+        const sliderId = e.target.id + '-slider';
+        const slider = document.getElementById(sliderId);
+        if (slider) {
+            updateSliderFromInput(slider, parseFloat(e.target.value));
+        }
+        handleSettingsChange();
+    }
+    
     function handleSettingsChange() {
         updateTotalDuration();
         if (state.selectedIds.length > 0) {
             autoUpdatePreview();
+        }
+    }
+
+    function setupSliders() {
+        if (elements.frameDurationSlider) {
+            initializeSlider(elements.frameDurationSlider, elements.frameDuration);
+        }
+        if (elements.transitionDurationSlider) {
+            initializeSlider(elements.transitionDurationSlider, elements.transitionDuration);
+        }
+    }
+
+    function initializeSlider(sliderEl, inputEl) {
+        const min = parseFloat(sliderEl.dataset.min);
+        const max = parseFloat(sliderEl.dataset.max);
+        const value = parseFloat(sliderEl.dataset.value);
+        
+        updateSliderVisual(sliderEl, value, min, max);
+        
+        let isDragging = false;
+        
+        function handlePointerDown(e) {
+            isDragging = true;
+            sliderEl.setPointerCapture(e.pointerId);
+            updateSliderValue(e);
+            e.preventDefault();
+        }
+        
+        function handlePointerMove(e) {
+            if (!isDragging) return;
+            updateSliderValue(e);
+        }
+        
+        function handlePointerUp(e) {
+            if (!isDragging) return;
+            isDragging = false;
+            sliderEl.releasePointerCapture(e.pointerId);
+        }
+        
+        function updateSliderValue(e) {
+            const rect = sliderEl.getBoundingClientRect();
+            const percentage = Math.max(0, Math.min(1, (e.clientX - rect.left) / rect.width));
+            const rawValue = min + (max - min) * percentage;
+            const step = parseFloat(sliderEl.dataset.step) || 0.1;
+            const value = Math.round(rawValue / step) * step;
+            const clampedValue = Math.max(min, Math.min(max, value));
+            
+            updateSliderVisual(sliderEl, clampedValue, min, max);
+            if (inputEl) {
+                inputEl.value = clampedValue.toFixed(1);
+                handleSettingsChange();
+            }
+        }
+        
+        // Mouse/Touch events
+        sliderEl.addEventListener('pointerdown', handlePointerDown);
+        sliderEl.addEventListener('pointermove', handlePointerMove);
+        sliderEl.addEventListener('pointerup', handlePointerUp);
+        
+        // Keyboard events
+        const thumb = sliderEl.querySelector('.slider-thumb');
+        if (thumb) {
+            thumb.addEventListener('keydown', (e) => {
+                const step = parseFloat(sliderEl.dataset.step) || 0.1;
+                let currentValue = parseFloat(inputEl.value);
+                let newValue = currentValue;
+                
+                switch(e.key) {
+                    case 'ArrowRight':
+                    case 'ArrowUp':
+                        newValue = Math.min(max, currentValue + step);
+                        break;
+                    case 'ArrowLeft':
+                    case 'ArrowDown':
+                        newValue = Math.max(min, currentValue - step);
+                        break;
+                    case 'Home':
+                        newValue = min;
+                        break;
+                    case 'End':
+                        newValue = max;
+                        break;
+                    default:
+                        return;
+                }
+                
+                e.preventDefault();
+                updateSliderVisual(sliderEl, newValue, min, max);
+                if (inputEl) {
+                    inputEl.value = newValue.toFixed(1);
+                    handleSettingsChange();
+                }
+            });
+        }
+    }
+
+    function updateSliderFromInput(sliderEl, value) {
+        const min = parseFloat(sliderEl.dataset.min);
+        const max = parseFloat(sliderEl.dataset.max);
+        updateSliderVisual(sliderEl, value, min, max);
+    }
+
+    function updateSliderVisual(sliderEl, value, min, max) {
+        const percentage = ((value - min) / (max - min)) * 100;
+        const range = sliderEl.querySelector('.slider-range');
+        const thumb = sliderEl.querySelector('.slider-thumb');
+        
+        if (range) {
+            range.style.width = `${percentage}%`;
+        }
+        if (thumb) {
+            thumb.style.left = `${percentage}%`;
+            thumb.setAttribute('aria-valuenow', value.toString());
         }
     }
 
@@ -491,21 +625,26 @@
 
     function getFrameAtTime(time) {
         const { frameSec, transitionSec } = state.settings;
-        const segmentDuration = frameSec + transitionSec;
+        const numFrames = state.selectedIds.length;
+        
+        if (numFrames <= 0) return { currentIndex: 0, nextIndex: -1, alpha: 1.0 };
+        if (numFrames === 1) return { currentIndex: 0, nextIndex: -1, alpha: 1.0 };
         
         let accumulatedTime = 0;
-        for (let i = 0; i < state.selectedIds.length; i++) {
-            const segmentEnd = accumulatedTime + frameSec;
-            const transitionEnd = segmentEnd + (i < state.selectedIds.length - 1 ? transitionSec : 0);
+        
+        // Handle all frames except the last one (normal duration)
+        for (let i = 0; i < numFrames - 1; i++) {
+            const frameEnd = accumulatedTime + frameSec;
+            const transitionEnd = frameEnd + transitionSec;
             
-            if (time <= segmentEnd) {
+            if (time <= frameEnd) {
                 return {
                     currentIndex: i,
                     nextIndex: -1,
                     alpha: 1.0
                 };
-            } else if (time <= transitionEnd && i < state.selectedIds.length - 1) {
-                const progress = (time - segmentEnd) / transitionSec;
+            } else if (time <= transitionEnd) {
+                const progress = (time - frameEnd) / transitionSec;
                 return {
                     currentIndex: i,
                     nextIndex: i + 1,
@@ -516,8 +655,31 @@
             accumulatedTime = transitionEnd;
         }
         
+        // Handle the last frame (shorter duration)
+        const lastFrameIndex = numFrames - 1;
+        const lastFrameDuration = frameSec * 0.5;
+        const lastFrameEnd = accumulatedTime + lastFrameDuration;
+        const finalTransitionEnd = lastFrameEnd + transitionSec;
+        
+        if (time <= lastFrameEnd) {
+            return {
+                currentIndex: lastFrameIndex,
+                nextIndex: -1,
+                alpha: 1.0
+            };
+        } else if (time <= finalTransitionEnd) {
+            // Fade from last frame back to first frame for seamless loop
+            const progress = (time - lastFrameEnd) / transitionSec;
+            return {
+                currentIndex: lastFrameIndex,
+                nextIndex: 0, // Fade to first frame
+                alpha: 1 - progress
+            };
+        }
+        
+        // Should not reach here, but fallback to first frame
         return {
-            currentIndex: state.selectedIds.length - 1,
+            currentIndex: 0,
             nextIndex: -1,
             alpha: 1.0
         };
@@ -604,38 +766,54 @@
     }
 
     function showExportProgress(format, show) {
+        console.log(`showExportProgress(${format}, ${show})`);
+        const progressEl = document.getElementById(`export-progress-${format}`);
         const item = document.querySelector(`[data-format="${format}"]`);
-        const btn = item.querySelector('.export-btn');
-        const progress = item.querySelector('.progress-container');
-        const download = item.querySelector('.download-link');
+        const btn = item?.querySelector('.export-btn');
+        const download = item?.querySelector('.download-link');
+        
+        console.log('Progress elements found:', { progressEl: !!progressEl, item: !!item, btn: !!btn, download: !!download });
         
         if (show) {
-            btn.classList.add('hidden');
-            progress.classList.remove('hidden');
-            download.classList.add('hidden');
+            if (btn) btn.disabled = true;
+            if (progressEl) {
+                progressEl.classList.remove('hidden');
+                console.log('Progress bar should now be visible');
+            }
+            if (download) download.classList.add('hidden');
         } else {
-            btn.classList.remove('hidden');
-            progress.classList.add('hidden');
+            if (btn) btn.disabled = false;
+            if (progressEl) progressEl.classList.add('hidden');
         }
     }
 
     function updateExportProgress(format, percent, label) {
-        const item = document.querySelector(`[data-format="${format}"]`);
-        const bar = item.querySelector('.progress-bar');
-        const text = item.querySelector('.progress-label');
+        console.log(`updateExportProgress(${format}, ${percent}%, ${label})`);
+        const progressEl = document.getElementById(`export-progress-${format}`);
+        if (!progressEl) {
+            console.log('Progress element not found');
+            return;
+        }
         
-        bar.style.width = `${percent}%`;
-        if (label) text.textContent = label;
+        const bar = progressEl.querySelector('.progress-bar');
+        const text = progressEl.querySelector('.progress-label');
+        
+        console.log('Progress update elements:', { bar: !!bar, text: !!text });
+        
+        if (bar) bar.style.width = `${percent}%`;
+        if (label && text) text.textContent = `${format.toUpperCase()}: ${label}`;
     }
 
     function showDownloadLink(format, url, filename) {
         const item = document.querySelector(`[data-format="${format}"]`);
-        const download = item.querySelector('.download-link');
+        const download = item?.querySelector('.download-link');
         
-        download.href = url;
-        download.download = filename;
-        download.textContent = `Download ${format.toUpperCase()}`;
-        download.classList.remove('hidden');
+        if (download) {
+            download.href = url;
+            download.download = filename;
+            download.textContent = `Download ${format.toUpperCase()}`;
+            download.classList.remove('hidden');
+        }
         
         // Auto-download the file
         autoDownload(url, filename);
@@ -723,6 +901,7 @@
                 return;
             }
             
+            // Use the same seamless loop timeline
             renderSingleFrame(exportTime);
             
             const progress = (exportTime / totalDuration) * 100;
@@ -774,6 +953,7 @@
         for (let i = 0; i < frameCount; i++) {
             if (state.exportStatus.gif.state === 'cancelled') break;
             
+            // Use the same seamless loop timeline
             const time = (i / state.preview.fps);
             renderSingleFrame(time);
             

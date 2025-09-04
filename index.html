@@ -3,7 +3,37 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Motion Thumbnails</title>
+    <title>Motion Thumbnails - Create Animated Video Thumbnails</title>
+    <meta name="description" content="Create animated thumbnails from your videos instantly. Browser-based tool that converts videos to WebM, GIF, and MP4 thumbnails with smooth transitions. No uploads required - everything stays on your device.">
+    <meta name="keywords" content="animated thumbnails, video thumbnails, gif maker, webm, mp4, video editor, browser tool, client-side">
+    <meta name="author" content="Clark">
+    
+    <!-- Favicon -->
+    <link rel="icon" type="image/png" href="favicon.png">
+    <link rel="apple-touch-icon" href="favicon.png">
+    
+    <!-- Open Graph / Facebook -->
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="https://motion-thumbnails.netlify.app/">
+    <meta property="og:title" content="Motion Thumbnails - Create Animated Video Thumbnails">
+    <meta property="og:description" content="Create animated thumbnails from your videos instantly. Browser-based tool that converts videos to WebM, GIF, and MP4 thumbnails with smooth transitions.">
+    <meta property="og:image" content="https://motion-thumbnails.netlify.app/unfurl.png">
+    <meta property="og:image:width" content="1200">
+    <meta property="og:image:height" content="630">
+    
+    <!-- Twitter -->
+    <meta property="twitter:card" content="summary_large_image">
+    <meta property="twitter:url" content="https://motion-thumbnails.netlify.app/">
+    <meta property="twitter:title" content="Motion Thumbnails - Create Animated Video Thumbnails">
+    <meta property="twitter:description" content="Create animated thumbnails from your videos instantly. Browser-based tool that converts videos to WebM, GIF, and MP4 thumbnails with smooth transitions.">
+    <meta property="twitter:image" content="https://motion-thumbnails.netlify.app/unfurl.png">
+    
+    <!-- Additional Meta Tags -->
+    <meta name="theme-color" content="#393BFF">
+    <meta name="robots" content="index, follow">
+    <meta name="language" content="en">
+    <link rel="canonical" href="https://motion-thumbnails.netlify.app/">
+    
     <link rel="stylesheet" href="styles.css">
 </head>
 <body>
@@ -14,6 +44,7 @@
             </svg>
             Motion Thumbnails
         </h1>
+        <a href="mailto:clark@superfun.team" class="email-link">Email Clark</a>
     </header>
 
     <main>
@@ -31,9 +62,8 @@
         </section>
 
         <section id="main-editor-section" class="hidden">
-            <div class="card">
-                <div class="main-layout">
-                    <div class="frames-section">
+            <div class="main-layout">
+                <div class="frames-section">
                         <div class="section-header">
                             <h2>
                                 <svg xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 -960 960 960" width="24px" fill="currentColor">
@@ -42,10 +72,12 @@
                                 Frames
                             </h2>
                             <div class="toolbar">
-                                <button id="select-all-btn" class="btn btn-secondary btn-small">All</button>
-                                <button id="clear-btn" class="btn btn-secondary btn-small">None</button>
-                                <button id="invert-btn" class="btn btn-secondary btn-small">Invert</button>
                                 <span id="selection-count" class="selection-count">0 selected</span>
+                                <div class="toolbar-buttons">
+                                    <button id="select-all-btn" class="btn btn-secondary btn-small">All</button>
+                                    <button id="clear-btn" class="btn btn-secondary btn-small">None</button>
+                                    <button id="invert-btn" class="btn btn-secondary btn-small">Invert</button>
+                                </div>
                             </div>
                         </div>
                         <div id="stills-grid" class="stills-grid"></div>
@@ -62,14 +94,38 @@
                             </div>
                             <div class="settings-grid">
                                 <div class="setting">
-                                    <label for="frame-duration">Frame duration</label>
-                                    <input type="number" id="frame-duration" value="3.0" min="0.2" max="10" step="0.1">
-                                    <span class="unit">seconds</span>
+                                    <div class="setting-header">
+                                        <label for="frame-duration">Frame duration</label>
+                                        <span class="setting-unit">seconds</span>
+                                    </div>
+                                    <div class="setting-controls">
+                                        <div class="slider-container">
+                                            <div id="frame-duration-slider" class="slider" data-min="0.2" data-max="10" data-step="0.1" data-value="3.0">
+                                                <div class="slider-track">
+                                                    <div class="slider-range"></div>
+                                                </div>
+                                                <div class="slider-thumb" tabindex="0" role="slider" aria-valuemin="0.2" aria-valuemax="10" aria-valuenow="3.0"></div>
+                                            </div>
+                                        </div>
+                                        <input type="number" id="frame-duration" value="3.0" min="0.2" max="10" step="0.1">
+                                    </div>
                                 </div>
                                 <div class="setting">
-                                    <label for="transition-duration">Transition duration</label>
-                                    <input type="number" id="transition-duration" value="0.5" min="0" max="2" step="0.1">
-                                    <span class="unit">seconds</span>
+                                    <div class="setting-header">
+                                        <label for="transition-duration">Transition duration</label>
+                                        <span class="setting-unit">seconds</span>
+                                    </div>
+                                    <div class="setting-controls">
+                                        <div class="slider-container">
+                                            <div id="transition-duration-slider" class="slider" data-min="0" data-max="2" data-step="0.1" data-value="0.5">
+                                                <div class="slider-track">
+                                                    <div class="slider-range"></div>
+                                                </div>
+                                                <div class="slider-thumb" tabindex="0" role="slider" aria-valuemin="0" aria-valuemax="2" aria-valuenow="0.5"></div>
+                                            </div>
+                                        </div>
+                                        <input type="number" id="transition-duration" value="0.5" min="0" max="2" step="0.1">
+                                    </div>
                                 </div>
                             </div>
                         </div>
@@ -86,7 +142,11 @@
                             <div class="preview-controls">
                                 <button id="play-btn" class="btn btn-secondary hidden" aria-label="Play">▶</button>
                                 <button id="pause-btn" class="btn btn-secondary" aria-label="Pause">⏸</button>
-                                <button id="loop-btn" class="btn btn-secondary active" aria-label="Loop">🔁</button>
+                                <button id="loop-btn" class="btn btn-secondary active" aria-label="Loop">
+                                    <svg xmlns="http://www.w3.org/2000/svg" height="16px" viewBox="0 -960 960 960" width="16px" fill="currentColor">
+                                        <path d="m360-160-56-56 70-72q-128-17-211-70T80-480q0-83 115.5-141.5T480-680q169 0 284.5 58.5T880-480q0 62-66.5 111T640-296v-82q77-20 118.5-49.5T800-480q0-32-85.5-76T480-600q-149 0-234.5 44T160-480q0 24 51 57.5T356-372l-52-52 56-56 160 160-160 160Z"/>
+                                    </svg>
+                                </button>
                                 <span id="preview-status" class="preview-status">Frame 1/1 • 0s/0s</span>
                             </div>
                         </div>
@@ -95,53 +155,56 @@
                         </div>
                         
                         <div class="export-section">
-                            <h3>
-                                <svg xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 -960 960 960" width="24px" fill="currentColor">
-                                    <path d="M200-766v572q-17-17-32-36t-28-39v-422q13-20 28-39t32-36Zm160-96v764q-21-7-41-15.5T280-133v-694q19-11 39-19.5t41-15.5Zm280 749v-734q106 47 173 145t67 222q0 124-67 222T640-113ZM480-80q-10 0-20-.5T440-82v-796q10-1 20-1.5t20-.5q20 0 40 2t40 6v784q-20 4-40 6t-40 2Z"/>
-                                </svg>
-                                Export
-                            </h3>
-                            <div class="export-row">
-                                <div class="export-item" data-format="webm">
-                                    <button class="btn btn-primary export-btn">webm</button>
-                                    <div class="progress-container hidden">
+                            <div class="export-header">
+                                <h3>
+                                    <svg xmlns="http://www.w3.org/2000/svg" height="24px" viewBox="0 -960 960 960" width="24px" fill="currentColor">
+                                        <path d="M200-766v572q-17-17-32-36t-28-39v-422q13-20 28-39t32-36Zm160-96v764q-21-7-41-15.5T280-133v-694q19-11 39-19.5t41-15.5Zm280 749v-734q106 47 173 145t67 222q0 124-67 222T640-113ZM480-80q-10 0-20-.5T440-82v-796q10-1 20-1.5t20-.5q20 0 40 2t40 6v784q-20 4-40 6t-40 2Z"/>
+                                    </svg>
+                                    Export
+                                </h3>
+                                <div class="export-progress-area">
+                                    <div id="export-progress-webm" class="export-progress hidden">
                                         <div class="progress">
                                             <div class="progress-bar"></div>
                                         </div>
-                                        <span class="progress-label">Initializing...</span>
-                                        <button class="btn btn-secondary btn-small cancel-btn">Cancel</button>
+                                        <span class="progress-label">WebM: Initializing...</span>
+                                        <button class="btn btn-secondary btn-small cancel-btn" data-format="webm">Cancel</button>
                                     </div>
+                                    <div id="export-progress-gif" class="export-progress hidden">
+                                        <div class="progress">
+                                            <div class="progress-bar"></div>
+                                        </div>
+                                        <span class="progress-label">GIF: Initializing...</span>
+                                        <button class="btn btn-secondary btn-small cancel-btn" data-format="gif">Cancel</button>
+                                    </div>
+                                    <div id="export-progress-mp4" class="export-progress hidden">
+                                        <div class="progress">
+                                            <div class="progress-bar"></div>
+                                        </div>
+                                        <span class="progress-label">MP4: Initializing...</span>
+                                        <button class="btn btn-secondary btn-small cancel-btn" data-format="mp4">Cancel</button>
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="export-row">
+                                <div class="export-item" data-format="webm">
+                                    <button class="btn btn-primary export-btn">webm</button>
                                     <a class="download-link hidden" download>Download WebM</a>
                                 </div>
                                 
                                 <div class="export-item" data-format="gif">
                                     <button class="btn btn-primary export-btn">gif</button>
-                                    <div class="progress-container hidden">
-                                        <div class="progress">
-                                            <div class="progress-bar"></div>
-                                        </div>
-                                        <span class="progress-label">Initializing...</span>
-                                        <button class="btn btn-secondary btn-small cancel-btn">Cancel</button>
-                                    </div>
                                     <a class="download-link hidden" download>Download GIF</a>
                                 </div>
                                 
                                 <div class="export-item" data-format="mp4">
                                     <button class="btn btn-primary export-btn">mp4</button>
-                                    <div class="progress-container hidden">
-                                        <div class="progress">
-                                            <div class="progress-bar"></div>
-                                        </div>
-                                        <span class="progress-label">Initializing...</span>
-                                        <button class="btn btn-secondary btn-small cancel-btn">Cancel</button>
-                                    </div>
                                     <a class="download-link hidden" download>Download MP4</a>
                                 </div>
                             </div>
                         </div>
                     </div>
                 </div>
-            </div>
         </section>
     </main>
 
