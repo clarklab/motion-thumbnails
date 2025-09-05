@@ -766,39 +766,34 @@
     }
 
     function showExportProgress(format, show) {
-        console.log(`showExportProgress(${format}, ${show})`);
         const progressEl = document.getElementById(`export-progress-${format}`);
         const item = document.querySelector(`[data-format="${format}"]`);
         const btn = item?.querySelector('.export-btn');
         const download = item?.querySelector('.download-link');
         
-        console.log('Progress elements found:', { progressEl: !!progressEl, item: !!item, btn: !!btn, download: !!download });
-        
         if (show) {
             if (btn) btn.disabled = true;
             if (progressEl) {
                 progressEl.classList.remove('hidden');
-                console.log('Progress bar should now be visible');
+                // Force visibility for debugging
+                progressEl.style.display = 'flex';
             }
             if (download) download.classList.add('hidden');
         } else {
             if (btn) btn.disabled = false;
-            if (progressEl) progressEl.classList.add('hidden');
+            if (progressEl) {
+                progressEl.classList.add('hidden');
+                progressEl.style.display = '';
+            }
         }
     }
 
     function updateExportProgress(format, percent, label) {
-        console.log(`updateExportProgress(${format}, ${percent}%, ${label})`);
         const progressEl = document.getElementById(`export-progress-${format}`);
-        if (!progressEl) {
-            console.log('Progress element not found');
-            return;
-        }
+        if (!progressEl) return;
         
         const bar = progressEl.querySelector('.progress-bar');
         const text = progressEl.querySelector('.progress-label');
-        
-        console.log('Progress update elements:', { bar: !!bar, text: !!text });
         
         if (bar) bar.style.width = `${percent}%`;
         if (label && text) text.textContent = `${format.toUpperCase()}: ${label}`;
