@@ -9,7 +9,8 @@
         settings: {
             frameSec: 3.0,
             transitionSec: 0.5,
-            fade: true
+            fade: true,
+            quality: 'original'
         },
         preview: {
             ready: false,
@@ -51,7 +52,9 @@
         previewStatus: document.getElementById('preview-status'),
         selectAllBtn: document.getElementById('select-all-btn'),
         clearBtn: document.getElementById('clear-btn'),
-        invertBtn: document.getElementById('invert-btn')
+        invertBtn: document.getElementById('invert-btn'),
+        exportQuality: document.getElementById('export-quality'),
+        newThumbBtn: document.getElementById('new-thumb-btn')
     };
 
     function init() {
@@ -91,6 +94,18 @@
         document.querySelectorAll('.cancel-btn').forEach(btn => {
             btn.addEventListener('click', handleCancelExport);
         });
+
+        // Quality selector
+        if (elements.exportQuality) {
+            elements.exportQuality.addEventListener('change', (e) => {
+                state.settings.quality = e.target.value;
+            });
+        }
+        
+        // New thumb button
+        if (elements.newThumbBtn) {
+            elements.newThumbBtn.addEventListener('click', handleNewThumb);
+        }
     }
 
     function handleDragOver(e) {
@@ -238,15 +253,30 @@
     function showStillsUI() {
         elements.stillsGrid.innerHTML = '';
         
+        // Randomly select 4 frames for initial preview
+        const randomIndices = [];
+        const numStills = state.stills.length;
+        const numToSelect = Math.min(4, numStills);
+        
+        while (randomIndices.length < numToSelect) {
+            const randomIdx = Math.floor(Math.random() * numStills);
+            if (!randomIndices.includes(randomIdx)) {
+                randomIndices.push(randomIdx);
+            }
+        }
+        // Sort to maintain chronological order
+        randomIndices.sort((a, b) => a - b);
+        
         state.stills.forEach((still, index) => {
             const div = document.createElement('div');
-            div.className = 'still-item selected';
+            const isInitiallySelected = randomIndices.includes(index);
+            div.className = `still-item${isInitiallySelected ? ' selected' : ''}`;
             div.dataset.id = still.id;
             
             const checkbox = document.createElement('input');
             checkbox.type = 'checkbox';
             checkbox.id = `checkbox-${still.id}`;
-            checkbox.checked = true;
+            checkbox.checked = isInitiallySelected;
             checkbox.addEventListener('change', handleStillSelection);
             
             const img = document.createElement('img');
@@ -269,7 +299,9 @@
             });
             
             elements.stillsGrid.appendChild(div);
-            state.selectedIds.push(still.id);
+            if (isInitiallySelected) {
+                state.selectedIds.push(still.id);
+            }
         });
         
         updateSelectionCount();
@@ -691,31 +723,43 @@
         const ctx = elements.previewCanvas.getContext('2d');
         const canvas = elements.previewCanvas;
         
+        renderFrameDataToCanvas(frameData, ctx, canvas);
+    }
+    
+    function renderFrameDataToCanvas(frameData, ctx, canvas) {
         ctx.clearRect(0, 0, canvas.width, canvas.height);
         
         const currentStill = state.stills.find(s => s.id === state.selectedIds[frameData.currentIndex]);
         if (!currentStill) return;
         
         if (frameData.nextIndex === -1 || frameData.alpha === 1) {
-            drawStill(ctx, currentStill, 1.0);
+            drawStillToCanvas(ctx, currentStill, 1.0, canvas);
         } else {
-            drawStill(ctx, currentStill, frameData.alpha);
+            drawStillToCanvas(ctx, currentStill, frameData.alpha, canvas);
             
             const nextStill = state.stills.find(s => s.id === state.selectedIds[frameData.nextIndex]);
             if (nextStill) {
-                drawStill(ctx, nextStill, 1 - frameData.alpha);
+                drawStillToCanvas(ctx, nextStill, 1 - frameData.alpha, canvas);
             }
         }
     }
 
     function drawStill(ctx, still, alpha) {
+        drawStillToCanvas(ctx, still, alpha, ctx.canvas);
+    }
+    
+    function drawStillToCanvas(ctx, still, alpha, canvas) {
         ctx.globalAlpha = alpha;
         
+        // Enable high-quality image smoothing
+        ctx.imageSmoothingEnabled = true;
+        ctx.imageSmoothingQuality = 'high';
+        
         if (still.bitmap) {
-            ctx.drawImage(still.bitmap, 0, 0, ctx.canvas.width, ctx.canvas.height);
+            ctx.drawImage(still.bitmap, 0, 0, canvas.width, canvas.height);
         } else if (videoElement) {
             videoElement.currentTime = still.tSec;
-            ctx.drawImage(videoElement, 0, 0, ctx.canvas.width, ctx.canvas.height);
+            ctx.drawImage(videoElement, 0, 0, canvas.width, canvas.height);
         }
         
         ctx.globalAlpha = 1.0;
@@ -761,7 +805,7 @@
     }
 
     function handleCancelExport(e) {
-        const format = e.target.closest('.export-item').dataset.format;
+        const format = e.target.dataset.format;
         cancelExport(format);
     }
 
@@ -775,15 +819,12 @@
             if (btn) btn.disabled = true;
             if (progressEl) {
                 progressEl.classList.remove('hidden');
-                // Force visibility for debugging
-                progressEl.style.display = 'flex';
             }
             if (download) download.classList.add('hidden');
         } else {
             if (btn) btn.disabled = false;
             if (progressEl) {
                 progressEl.classList.add('hidden');
-                progressEl.style.display = '';
             }
         }
     }
@@ -792,8 +833,8 @@
         const progressEl = document.getElementById(`export-progress-${format}`);
         if (!progressEl) return;
         
-        const bar = progressEl.querySelector('.progress-bar');
-        const text = progressEl.querySelector('.progress-label');
+        const bar = progressEl.querySelector('.progress-overlay-fill');
+        const text = progressEl.querySelector('.progress-overlay-label');
         
         if (bar) bar.style.width = `${percent}%`;
         if (label && text) text.textContent = `${format.toUpperCase()}: ${label}`;
@@ -848,13 +889,45 @@
     async function exportWebM() {
         state.exportStatus.webm.state = 'encoding';
         
-        const stream = elements.previewCanvas.captureStream(state.preview.fps);
+        // Create export canvas with quality-based dimensions
+        const exportCanvas = document.createElement('canvas');
+        const exportCtx = exportCanvas.getContext('2d');
+        const { width: exportWidth, height: exportHeight } = getExportDimensions();
+        exportCanvas.width = exportWidth;
+        exportCanvas.height = exportHeight;
+        
+        // Optimize frame rate based on content - thumbnails don't need high fps
+        const optimizedFps = Math.min(state.preview.fps, 15); // Cap at 15fps for smaller files
+        const stream = exportCanvas.captureStream(optimizedFps);
+        
+        // Use VP9 for better compression, fall back to VP8
         const mimeType = MediaRecorder.isTypeSupported('video/webm;codecs=vp9') 
             ? 'video/webm;codecs=vp9' 
-            : 'video/webm;codecs=vp8';
+            : MediaRecorder.isTypeSupported('video/webm;codecs=vp8')
+            ? 'video/webm;codecs=vp8'
+            : 'video/webm';
+        
+        // Optimize bitrate based on quality setting and content
+        const pixelCount = exportWidth * exportHeight;
+        
+        // Calculate optimal bitrate based on resolution and motion content
+        // For thumbnails, we can use lower bitrates since they're short loops
+        const baseBitrate = Math.max(200000, pixelCount * 0.15); // Minimum 200kbps, scale with resolution
+        
+        const qualityMultipliers = {
+            'original': 1.0,
+            '720': 0.8,
+            '480': 0.6,
+            '320': 0.4
+        };
+        
+        const videoBitsPerSecond = Math.round(baseBitrate * (qualityMultipliers[state.settings.quality] || 1.0));
         
         const chunks = [];
-        exportMediaRecorder = new MediaRecorder(stream, { mimeType });
+        exportMediaRecorder = new MediaRecorder(stream, { 
+            mimeType,
+            videoBitsPerSecond 
+        });
         
         exportMediaRecorder.ondataavailable = (e) => {
             if (e.data.size > 0) chunks.push(e.data);
@@ -888,7 +961,7 @@
             }
             
             const elapsed = (performance.now() - startTime) / 1000;
-            exportTime = elapsed * (state.preview.fps / 1000) * 83.33;
+            exportTime = elapsed * (optimizedFps / 1000) * 83.33;
             
             if (exportTime >= totalDuration) {
                 exportMediaRecorder.stop();
@@ -896,8 +969,9 @@
                 return;
             }
             
-            // Use the same seamless loop timeline
-            renderSingleFrame(exportTime);
+            // Render to export canvas at target quality
+            const frameData = getFrameAtTime(exportTime);
+            renderFrameDataToCanvas(frameData, exportCtx, exportCanvas);
             
             const progress = (exportTime / totalDuration) * 100;
             updateExportProgress('webm', progress, 'Encoding...');
@@ -916,10 +990,17 @@
         }
         
         const totalDuration = calculateTotalDuration(state.selectedIds.length, state.settings.frameSec, state.settings.transitionSec);
-        const frameCount = Math.ceil(totalDuration * state.preview.fps);
-        const frameDuration = 1000 / state.preview.fps;
+        // Optimize frame rate for GIFs - lower fps = smaller files, but maintain smoothness
+        const optimizedFps = Math.min(state.preview.fps, 12); // Cap at 12fps for GIFs
+        const frameCount = Math.ceil(totalDuration * optimizedFps);
+        const frameDuration = 1000 / optimizedFps;
         
-        const { width, height } = elements.previewCanvas;
+        // Create export canvas with quality-based dimensions
+        const exportCanvas = document.createElement('canvas');
+        const exportCtx = exportCanvas.getContext('2d');
+        const { width: exportWidth, height: exportHeight } = getExportDimensions();
+        exportCanvas.width = exportWidth;
+        exportCanvas.height = exportHeight;
         
         exportWorkers.gif.onmessage = (e) => {
             const { type, progress, url, error } = e.data;
@@ -939,8 +1020,8 @@
         
         exportWorkers.gif.postMessage({
             type: 'init',
-            width,
-            height,
+            width: exportWidth,
+            height: exportHeight,
             frameCount,
             frameDuration
         });
@@ -948,11 +1029,12 @@
         for (let i = 0; i < frameCount; i++) {
             if (state.exportStatus.gif.state === 'cancelled') break;
             
-            // Use the same seamless loop timeline
-            const time = (i / state.preview.fps);
-            renderSingleFrame(time);
+            // Render to export canvas at target quality
+            const time = (i / optimizedFps);
+            const frameData = getFrameAtTime(time);
+            renderFrameDataToCanvas(frameData, exportCtx, exportCanvas);
             
-            const imageData = elements.previewCanvas.getContext('2d').getImageData(0, 0, width, height);
+            const imageData = exportCtx.getImageData(0, 0, exportWidth, exportHeight);
             
             exportWorkers.gif.postMessage({
                 type: 'frame',
@@ -1001,7 +1083,9 @@
                 exportWorkers.mp4.postMessage({
                     type: 'transcode',
                     input: buffer,
-                    fps: state.preview.fps
+                    fps: state.preview.fps,
+                    quality: state.settings.quality,
+                    dimensions: getExportDimensions()
                 }, [buffer]);
             }
         };
@@ -1020,6 +1104,35 @@
         const seconds = String(now.getSeconds()).padStart(2, '0');
         
         return `${year}${month}${day}-${hours}${minutes}${seconds}`;
+    }
+    
+    function handleNewThumb() {
+        const confirmed = confirm('Are you REALLY sure? This will refresh the page and you\'ll lose your current work.');
+        if (confirmed) {
+            window.location.reload();
+        }
+    }
+
+    function getExportDimensions() {
+        const quality = state.settings.quality;
+        const { width: originalWidth, height: originalHeight } = state.videoMeta;
+        
+        if (quality === 'original') {
+            return { width: originalWidth, height: originalHeight };
+        }
+        
+        const targetHeight = parseInt(quality);
+        const aspectRatio = originalWidth / originalHeight;
+        
+        // Calculate new dimensions maintaining aspect ratio
+        let newHeight = Math.min(targetHeight, originalHeight);
+        let newWidth = Math.round(newHeight * aspectRatio);
+        
+        // Ensure dimensions are even for video encoding
+        newWidth = newWidth % 2 === 0 ? newWidth : newWidth + 1;
+        newHeight = newHeight % 2 === 0 ? newHeight : newHeight + 1;
+        
+        return { width: newWidth, height: newHeight };
     }
 
     init();

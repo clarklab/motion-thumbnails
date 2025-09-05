@@ -44,7 +44,26 @@
             </svg>
             Motion Thumbnails
         </h1>
-        <a href="mailto:clark@superfun.team" class="email-link">Email Clark</a>
+        <div class="header-actions">
+            <a href="mailto:clark@superfun.team" class="email-link">Email Clark</a>
+            <button id="new-thumb-btn" class="header-btn header-btn-primary">
+                <svg width="16" height="16" viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
+                    <g clip-path="url(#clip0_2_1042)">
+                        <path d="M2.17 15.99L29.84 16.02" stroke="currentColor" stroke-width="2" stroke-miterlimit="10"/>
+                        <path d="M2.17 15.99L29.84 16.02" stroke="currentColor" stroke-width="2" stroke-miterlimit="10"/>
+                        <path d="M23.35 27.42L8.66 4.58997" stroke="currentColor" stroke-width="2" stroke-miterlimit="10"/>
+                        <path d="M23.26 4.53998L19.23 10.91L12.78 21.1L8.75 27.47" stroke="currentColor" stroke-width="2" stroke-miterlimit="10"/>
+                        <path d="M2.17 15.99L29.84 16.02" stroke="currentColor" stroke-width="2" stroke-miterlimit="10"/>
+                    </g>
+                    <defs>
+                        <clipPath id="clip0_2_1042">
+                            <rect width="32" height="32" fill="white"/>
+                        </clipPath>
+                    </defs>
+                </svg>
+                New Thumb
+            </button>
+        </div>
     </header>
 
     <main>
@@ -152,6 +171,35 @@
                         </div>
                         <div class="preview-container">
                             <canvas id="preview-canvas"></canvas>
+                            <div class="preview-progress-overlay">
+                                <div id="export-progress-webm" class="export-progress-overlay hidden">
+                                    <div class="progress-overlay-content">
+                                        <span class="progress-overlay-label">WebM: Initializing...</span>
+                                        <div class="progress-overlay-bar">
+                                            <div class="progress-overlay-fill"></div>
+                                        </div>
+                                        <button class="btn btn-secondary btn-small cancel-btn" data-format="webm">Cancel</button>
+                                    </div>
+                                </div>
+                                <div id="export-progress-gif" class="export-progress-overlay hidden">
+                                    <div class="progress-overlay-content">
+                                        <span class="progress-overlay-label">GIF: Initializing...</span>
+                                        <div class="progress-overlay-bar">
+                                            <div class="progress-overlay-fill"></div>
+                                        </div>
+                                        <button class="btn btn-secondary btn-small cancel-btn" data-format="gif">Cancel</button>
+                                    </div>
+                                </div>
+                                <div id="export-progress-mp4" class="export-progress-overlay hidden">
+                                    <div class="progress-overlay-content">
+                                        <span class="progress-overlay-label">MP4: Initializing...</span>
+                                        <div class="progress-overlay-bar">
+                                            <div class="progress-overlay-fill"></div>
+                                        </div>
+                                        <button class="btn btn-secondary btn-small cancel-btn" data-format="mp4">Cancel</button>
+                                    </div>
+                                </div>
+                            </div>
                         </div>
                         
                         <div class="export-section">
@@ -162,30 +210,17 @@
                                     </svg>
                                     Export
                                 </h3>
-                                <div class="export-progress-area">
-                                    <div id="export-progress-webm" class="export-progress hidden">
-                                        <div class="progress">
-                                            <div class="progress-bar"></div>
-                                        </div>
-                                        <span class="progress-label">WebM: Initializing...</span>
-                                        <button class="btn btn-secondary btn-small cancel-btn" data-format="webm">Cancel</button>
-                                    </div>
-                                    <div id="export-progress-gif" class="export-progress hidden">
-                                        <div class="progress">
-                                            <div class="progress-bar"></div>
-                                        </div>
-                                        <span class="progress-label">GIF: Initializing...</span>
-                                        <button class="btn btn-secondary btn-small cancel-btn" data-format="gif">Cancel</button>
-                                    </div>
-                                    <div id="export-progress-mp4" class="export-progress hidden">
-                                        <div class="progress">
-                                            <div class="progress-bar"></div>
-                                        </div>
-                                        <span class="progress-label">MP4: Initializing...</span>
-                                        <button class="btn btn-secondary btn-small cancel-btn" data-format="mp4">Cancel</button>
-                                    </div>
+                                <div class="quality-selector">
+                                    <label for="export-quality">Quality:</label>
+                                    <select id="export-quality" class="quality-dropdown">
+                                        <option value="original">Original</option>
+                                        <option value="720">720p</option>
+                                        <option value="480">480p</option>
+                                        <option value="320">320p</option>
+                                    </select>
                                 </div>
                             </div>
+                            
                             <div class="export-row">
                                 <div class="export-item" data-format="webm">
                                     <button class="btn btn-primary export-btn">webm</button>

@@ -36,24 +36,40 @@ async function initFFmpeg() {
     }
 }
 
-async function transcodeWebMToMP4({ input, fps }) {
+async function transcodeWebMToMP4({ input, fps, quality, dimensions }) {
     try {
         const inputName = 'input.webm';
         const outputName = 'output.mp4';
         
         ffmpeg.FS('writeFile', inputName, new Uint8Array(input));
         
-        await ffmpeg.run(
+        // Quality-based CRF values (lower = higher quality, larger file)
+        // Optimized for thumbnails - can use higher CRF for smaller files
+        const crfValues = {
+            'original': '20',  // Slightly higher CRF for better compression
+            '720': '24',
+            '480': '26',
+            '320': '28'
+        };
+        const crf = crfValues[quality] || '24';
+        
+        // Build optimized ffmpeg command
+        const args = [
             '-i', inputName,
             '-c:v', 'libx264',
-            '-preset', 'fast',
-            '-crf', '23',
+            '-preset', 'veryslow',  // Better compression at cost of encoding time
+            '-crf', crf,
             '-pix_fmt', 'yuv420p',
+            '-profile:v', 'baseline', // Better compatibility
+            '-level', '3.0',
             '-movflags', '+faststart',
-            '-an',
-            '-r', String(fps),
+            '-x264opts', 'subme=6:me_range=15:rc_lookahead=25:keyint=250:min-keyint=25:bframes=3',
+            '-an', // No audio
+            '-r', String(Math.min(fps, 15)), // Cap frame rate for smaller files
             outputName
-        );
+        ];
+        
+        await ffmpeg.run(...args);
         
         const data = ffmpeg.FS('readFile', outputName);
         const blob = new Blob([data.buffer], { type: 'video/mp4' });

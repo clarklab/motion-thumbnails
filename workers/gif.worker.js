@@ -27,7 +27,8 @@ function initEncoder({ width, height, frameCount: total, frameDuration }) {
         encoder.setRepeat(0);
         encoder.setDelay(frameDuration);
         encoder.setSize(width, height);
-        encoder.setQuality(10);
+        encoder.setQuality(5); // Better quality (1-30, lower = better)
+        encoder.setTransparent(null);
         encoder.start();
         
     } catch (error) {
